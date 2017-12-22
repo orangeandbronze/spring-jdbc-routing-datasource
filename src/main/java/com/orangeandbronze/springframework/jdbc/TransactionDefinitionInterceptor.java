@@ -45,7 +45,7 @@ public class TransactionDefinitionInterceptor implements Ordered {
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 10; // before Spring's TransactionInterceptor
 
-	protected TransactionDefinitionInterceptor(
+	public TransactionDefinitionInterceptor(
 			TransactionAttributeSource transactionAttributeSource) {
 		this.transactionAttributeSource = transactionAttributeSource;
 	}
