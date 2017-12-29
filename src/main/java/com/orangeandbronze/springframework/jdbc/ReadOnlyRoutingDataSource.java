@@ -1,5 +1,9 @@
 package com.orangeandbronze.springframework.jdbc;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
@@ -24,15 +28,26 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class ReadOnlyRoutingDataSource extends AbstractRoutingDataSource {
 	
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-	// TODO Allow readOnly and readWrite keys to be configurable
+
+	private List<Object> dataSourceKeys;
+
+	@Override
+	public void setTargetDataSources(Map<Object, Object> targetDataSources) {
+		super.setTargetDataSources(targetDataSources);
+		this.dataSourceKeys = new ArrayList<>(targetDataSources.keySet());
+	}
 
 	@Override
 	protected Object determineCurrentLookupKey() {
-		String key = TransactionSynchronizationManager
-				.isCurrentTransactionReadOnly() ? "readOnly" : "readWrite";
-		logger.debug("Determined lookup key: {}", key);
-		return key;
+		if (TransactionSynchronizationManager
+				.isCurrentTransactionReadOnly()
+				&& !this.dataSourceKeys.isEmpty()) {
+			int random = (int) Math.random() * this.dataSourceKeys.size();
+			Object key = this.dataSourceKeys.get(random);
+			logger.debug("Determined lookup key: {}", key);
+			return key;
+		}
+		return null;
 	}
 
 }

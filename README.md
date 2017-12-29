@@ -1,6 +1,6 @@
-# Some Implementations of Spring's AbstractRoutingDataSource
+# Examples of Spring's AbstractRoutingDataSource
 
-It can sometimes be useful to use a read-only replica database to increase the performance of read-heavy applications. Here, we have two:
+It can sometimes be useful to use a read-only replica database to increase the performance of read-heavy applications. Here, we have two examples that use Spring's `AbstractRoutingDataSource` to route to the read-only replica if the transaction is read-only.
 
 - [ReadOnlyRoutingDataSource](https://github.com/orangeandbronze/spring-jdbc-routing-datasource/blob/master/src/main/java/com/orangeandbronze/springframework/jdbc/ReadOnlyRoutingDataSource.java)
 - [TransactionDefinitionRoutingDataSource](https://github.com/orangeandbronze/spring-jdbc-routing-datasource/blob/master/src/main/java/com/orangeandbronze/springframework/jdbc/TransactionDefinitionRoutingDataSource.java)
@@ -30,8 +30,8 @@ public class ... {
     DataSource routingDataSource() {
     	ReadOnlyRoutingDataSource rds = new ...();
     	Map<Object, Object> dataSources = new ...();
-    	dataSources.put("readWrite", master());
-    	dataSources.put("readOnly", replica());
+    	dataSources.put("replica1", replica1());
+    	...
     	rds.setTargetDataSources(dataSources);
     	rds.setDefaultTargetDataSource(master());
     	return rds;
@@ -41,7 +41,7 @@ public class ... {
     DataSource master() {...}
 
     @Bean
-    DataSource replica() {...}
+    DataSource replica1() {...}
 
 }
 ```
@@ -49,6 +49,8 @@ public class ... {
 The `LazyConnectionDataSourceProxy` was necessary since Spring will initially get a `Connection` *before* a transaction synchronization is initialized. Thus, the needed information in `TransactionSynchronizationManager` has not yet been provided when the `getConnection()` call is made. To work around this, the `LazyConnectionDataSourceProxy` provides a *dummy* connection until the first creation of a `Statement`.
 
 A much *cleaner* implementation is provided by `TransactionDefinitionRoutingDataSource`.
+
+Please see the [configuration](https://github.com/orangeandbronze/spring-jdbc-routing-datasource/blob/master/src/test/java/com/orangeandbronze/springframework/jdbc/ReadOnlyRoutingDataSourceConfig.java) used in tests. You can use this as a starting point.
 
 ## TransactionDefinitionRoutingDataSource
 
@@ -78,8 +80,8 @@ public class ... {
     DataSource dataSource() {
     	TransactionDefinitionRoutingDataSource tdrds = new ...();
     	Map<Object, Object> dataSources = new ...();
-    	dataSources.put("readWrite", master());
-    	dataSources.put("readOnly", replica());
+    	dataSources.put("replica1", replica1());
+    	...
     	tdrds.setTargetDataSources(dataSources);
     	tdrds.setDefaultTargetDataSource(master());
     	return tdrds;
@@ -89,7 +91,7 @@ public class ... {
     DataSource master() {...}
 
     @Bean
-    DataSource replica() {...}
+    DataSource replica1() {...}
 
 }
 ```

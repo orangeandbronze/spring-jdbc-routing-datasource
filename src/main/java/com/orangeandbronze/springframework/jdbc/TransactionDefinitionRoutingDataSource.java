@@ -1,5 +1,10 @@
 package com.orangeandbronze.springframework.jdbc;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
@@ -24,14 +29,27 @@ public class TransactionDefinitionRoutingDataSource extends AbstractRoutingDataS
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	// TODO Allow readOnly and readWrite keys to be configurable
+	private List<Object> dataSourceKeys;
+
+	private final AtomicInteger currentIndex = new AtomicInteger();
+
+	@Override
+	public void setTargetDataSources(Map<Object, Object> targetDataSources) {
+		super.setTargetDataSources(targetDataSources);
+		this.dataSourceKeys = new ArrayList<>(targetDataSources.keySet());
+	}
 
 	@Override
 	protected Object determineCurrentLookupKey() {
-		Object key = TransactionDefinitionInterceptor
-				.isCurrentTransactionReadOnly() ? "readOnly" : "readWrite";
-		logger.debug("Determined lookup key: {}", key);
-		return key;
+		if (TransactionDefinitionInterceptor
+				.isCurrentTransactionReadOnly()
+				&& !dataSourceKeys.isEmpty()) {
+			int size = dataSourceKeys.size();
+			Object key = dataSourceKeys.get(currentIndex.getAndIncrement() % size);
+			logger.debug("Determined lookup key: {}", key);
+			return key;
+		}
+		return null;
 	}
 
 }

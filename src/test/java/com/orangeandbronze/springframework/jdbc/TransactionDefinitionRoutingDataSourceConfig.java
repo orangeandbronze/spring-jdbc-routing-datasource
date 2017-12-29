@@ -1,6 +1,6 @@
 package com.orangeandbronze.springframework.jdbc;
 
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,8 +59,8 @@ public class TransactionDefinitionRoutingDataSourceConfig {
 		TransactionDefinitionRoutingDataSource tdrds =
 				new TransactionDefinitionRoutingDataSource();
 		Map<Object, Object> dataSources = new HashMap<>();
-		dataSources.put("readWrite", master());
-		dataSources.put("readOnly", replica());
+		dataSources.put("replica1", replica1());
+		dataSources.put("replica2", replica2());
 		tdrds.setTargetDataSources(dataSources);
 		tdrds.setDefaultTargetDataSource(master());
 		return tdrds;
@@ -74,9 +74,16 @@ public class TransactionDefinitionRoutingDataSourceConfig {
 	}
 
 	@Bean
-	DataSource replica() {
+	DataSource replica1() {
 		return spy(new EmbeddedDatabaseBuilder()
-				.setName("replica")
+				.setName("replica1")
+				.build());
+	}
+
+	@Bean
+	DataSource replica2() {
+		return spy(new EmbeddedDatabaseBuilder()
+				.setName("replica2")
 				.build());
 	}
 
